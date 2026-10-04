@@ -1,0 +1,18 @@
+manifest:
+  version: 1.2
+
+  remotes:
+    - name: upstream
+      url-base: https://github.com/zephyrproject-rtos
+
+  projects:
+    - name: zephyr
+      remote: upstream
+      revision: main
+      path: zephyr
+      import:
+        name-allowlist:
+          - cmsis
+          - cmsis_6
+          - hal_st
+          - hal_stm32
