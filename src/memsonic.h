@@ -1,8 +1,5 @@
 /**
- * @file memsonic.h
- * @brief C interface to the memsonic simulation library.
- *
- * ## Memory model
+ * C interface to the memsonic simulation library.
  *
  * All state lives inside a caller-allocated blob whose required size
  * and alignment are exported as compile-time constants (`MS_SIM_SIZE`,
@@ -15,10 +12,6 @@
 
 #include <stddef.h>
 #include <stdint.h>
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 /** A safe heuristic for the amount of kimenatic targets. */
 #define MS_SIM_N 256U
@@ -155,12 +148,9 @@ MsReady ms_sim_pressure(MsSim *sim, uint32_t tim, float *out);
 
 /**
  * @brief Drop the simulation.
- * Currently a no-op, may be useful in future.
+ * Currently a no-op, though may be useful in future.
  */
 void ms_sim_drop(MsSim *sim);
 
-#ifdef __cplusplus
-}
-#endif
 
 #endif /* MEMSONIC_H */

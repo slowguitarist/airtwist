@@ -20,7 +20,7 @@ add_custom_command(
     COMMAND cargo build
             --release
             --features ffi
-            --target "${MEMSONIC_RUST_TARGET}"
+            --target "${MEMSONIC_RS_TARGET}"
     WORKING_DIRECTORY "${MEMSONIC_DIR}"
     DEPENDS
         "${MEMSONIC_DIR}/Cargo.toml"
@@ -43,7 +43,12 @@ set_target_properties(memsonic PROPERTIES
 )
 add_dependencies(memsonic memsonic_rs)
 
-target_sources(app PRIVATE src/main.c)
+target_sources(app PRIVATE
+    src/main.c
+    src/injector.c
+    src/sensor.c
+    src/simulant.c
+)
 
 target_include_directories(app PRIVATE include)
 
