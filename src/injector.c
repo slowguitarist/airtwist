@@ -11,7 +11,6 @@
 #include <zephyr/kernel.h>
 #include <zephyr/device.h>
 #include <zephyr/drivers/uart.h>
-#include "memsonic.h"
 #include "tasks.h"
 
 void uart_noise_rx(const struct device *dev, void *usr)
@@ -49,7 +48,7 @@ void fault_injector_task(void *p1, void *p2, void *p3)
 	while (1) {
 		if (k_msgq_get(&random_dev, &noise_byte, K_FOREVER) == 0) {
 			k_mutex_lock(&fault_state_mutex, K_FOREVER);
-			/* Process entropy byte */
+			// todo
 			k_mutex_unlock(&fault_state_mutex);
 		}
 	}
