@@ -4,7 +4,7 @@
 #include <zephyr/kernel.h>
 #include <zephyr/device.h>
 
-#define MS_SIM_BUF_MAX_SIZE	16384
+#define MS_SIM_BUF_MAX_SIZE	32768
 
 /* Threads */
 
@@ -16,9 +16,9 @@ extern struct k_sem sensor_drdy_sem;
 extern struct k_msgq random_dev;
 extern struct k_mutex fault_state_mutex;
 
-extern const k_tid_t sensor_tid;
-extern const k_tid_t fault_injector_tid;
-extern const k_tid_t simulant_tid;
+extern const k_tid_t sensor_task_id;
+extern const k_tid_t fault_injector_task_id;
+extern const k_tid_t simulant_task_id;
 
 /* UART "Noise receiver" */
 

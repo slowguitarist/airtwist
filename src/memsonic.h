@@ -24,6 +24,9 @@ typedef struct { float acc, gyr, mag, bar; } MsODR;
 
 typedef struct { float x, y, z; } MsXYZ;
 
+/** Helper type not defined in library source code. */
+typedef struct { uint32_t dur; MsXYZ a; MsXYZ g; } MsTarget;
+
 typedef struct { int32_t val; } MsReady;
 
 static const MsReady MS_READY_NEW   = {1};

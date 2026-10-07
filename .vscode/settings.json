@@ -2,5 +2,6 @@
   "clangd.arguments": [
     "--compile-commands-dir=build/arduino-clangd",
     "--compile-commands-dir=build"
-  ]
+  ],
+  "editor.tabSize": 8
 }

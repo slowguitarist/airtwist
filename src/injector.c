@@ -13,6 +13,10 @@
 #include <zephyr/drivers/uart.h>
 #include "tasks.h"
 
+
+/*
+ * ISR that deposits random numbers obtained from Arduino IMU.
+ */
 void uart_noise_rx(const struct device *dev, void *usr)
 {
 	static uint8_t buf[8];

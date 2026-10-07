@@ -1,3 +1,7 @@
+/*
+ * Simulation entry -- threads, global definitions, and ISR setup.
+ */
+
 #include <zephyr/kernel.h>
 #include <zephyr/device.h>
 #include <zephyr/drivers/uart.h>
@@ -5,7 +9,7 @@
 
 
 K_THREAD_DEFINE(
-	sensor_tid,
+	sensor_task_id,
 	1024,
 	sensor_task,
 	NULL,
@@ -16,7 +20,7 @@ K_THREAD_DEFINE(
 	0
 );
 K_THREAD_DEFINE(
-	fault_injector_tid,
+	fault_injector_task_id,
 	1024,
 	fault_injector_task,
 	NULL,
@@ -27,7 +31,7 @@ K_THREAD_DEFINE(
 	0
 );
 K_THREAD_DEFINE(
-	simulant_tid,
+	simulant_task_id,
 	2048,
 	simulant_task,
 	NULL,
@@ -38,15 +42,14 @@ K_THREAD_DEFINE(
 	0
 );
 
-K_SEM_DEFINE(sensor_drdy_sem, 0, 1);
-
 /*
  * Simulated random device via message queue from ISR to fault injector.
  */
 K_MSGQ_DEFINE(random_dev, sizeof(uint64_t), 64, 8);
 
-K_MUTEX_DEFINE(fault_state_mutex);
-
+/*
+ * UART receiver structure (initialized by Zephyr).
+ */
 const struct device *noise_rcv;
 
 int main(void)
