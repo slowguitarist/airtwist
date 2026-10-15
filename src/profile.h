@@ -8,7 +8,7 @@
 #include "memsonic.h"
 
 static const MsTarget flight_profile[] = {
-    	// 1. Launch rail exit (~4 deg pad tilt, rapid thrust ramp)
+    	// 1. Launch rail exit
     	{ 0,    { 0.68f,  0.05f,  9.78f }, { 0.0f,   0.0f,   0.0f } },
     	{ 20,   { 0.68f,  0.05f,  9.78f }, { 0.1f,  -0.1f,   0.0f } },
     	{ 20,   { 0.70f,  0.08f, 11.20f }, { 0.3f,  -0.2f,   1.5f } },
@@ -20,7 +20,7 @@ static const MsTarget flight_profile[] = {
     	{ 20,   { 0.20f,  0.01f, 72.00f }, { 1.0f,  -0.5f, 100.0f } },
     	{ 20,   { 0.15f,  0.00f, 81.00f }, { 0.8f,  -0.4f, 130.0f } },
 
-    	// 2. Motor burn, thrust tail-off (~9g thrust, roll rate peak ~205 deg/s)
+    	// 2. Motor burn, thrust tail-off
     	{ 80,   { 0.12f,  0.01f, 86.50f }, { 0.5f,  -0.3f, 145.0f } },
     	{ 80,   { 0.10f,  0.01f, 89.20f }, { 0.3f,  -0.2f, 160.0f } },
     	{ 80,   { 0.08f,  0.00f, 91.50f }, { 0.2f,  -0.1f, 172.0f } },
@@ -57,7 +57,7 @@ static const MsTarget flight_profile[] = {
     	{ 40,   { 0.25f,  0.03f, 11.50f }, { 0.5f,  -0.4f, 105.0f } },
     	{ 40,   { 0.28f,  0.03f, 10.00f }, { 0.5f,  -0.5f,  95.0f } },
 
-    	// 3. Post-burnout drag, coast (az positive, fin roll damping)
+    	// 3. Post-burnout drag, coast (az positive)
     	{ 100,  { 0.32f,  0.04f,  9.20f }, { 0.6f,  -0.6f,  88.0f } },
     	{ 100,  { 0.36f,  0.04f,  8.60f }, { 0.6f,  -0.7f,  82.0f } },
     	{ 100,  { 0.40f,  0.05f,  8.10f }, { 0.7f,  -0.8f,  76.0f } },
@@ -89,7 +89,7 @@ static const MsTarget flight_profile[] = {
     	{ 150,  { 3.28f,  0.26f,  1.90f }, { 0.7f,  -6.8f,  11.0f } },
     	{ 150,  { 3.48f,  0.27f,  1.70f }, { 0.7f,  -7.9f,   9.8f } },
 
-    	// 4. Coasting gravity turn (pitch over to horizontal; gravity leaks into ax)
+    	// 4. Coasting gravity turn (pitch to horizontal; gravity leaks into ax)
     	{ 250,  { 3.70f,  0.28f,  1.60f }, { 0.7f,  -8.70f,  8.8f } },
     	{ 250,  { 3.92f,  0.29f,  1.50f }, { 0.6f,  -8.70f,  8.0f } },
     	{ 250,  { 4.15f,  0.30f,  1.40f }, { 0.6f,  -8.67f,  7.3f } },

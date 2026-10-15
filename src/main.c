@@ -42,6 +42,7 @@ K_THREAD_DEFINE(
 	0
 );
 
+#if EXTERNAL_NOISE > 0
 /*
  * Simulated random device via message queue from ISR to fault injector.
  */
@@ -52,14 +53,18 @@ K_MSGQ_DEFINE(random_dev, sizeof(uint64_t), 64, 8);
  */
 const struct device *noise_rcv;
 
+#endif /* EXTERNAL_NOISE */
+
 int main(void)
 {
+#if EXTERNAL_NOISE > 0
 	noise_rcv = DEVICE_DT_GET(DT_ALIAS(noisegen));
 	if (!device_is_ready(noise_rcv))
 		return -ENODEV;
 
 	uart_irq_callback_set(noise_rcv, uart_noise_rx);
 	uart_irq_rx_enable(noise_rcv);
+#endif /* EXTERNAL_NOISE */
 
 	return 0;
 }

@@ -8,17 +8,20 @@
 ⠀⠀⠀⠴⠮⢒⠇⣠⠷⡀⢲⠂⠵⠖        
 ⠀⠀⠀⠀⠠⠮⠚⠁⠀⠑⠢⠵⠄    */
 
+#include <stdint.h>
 #include <zephyr/kernel.h>
 #include <zephyr/device.h>
 #include <zephyr/drivers/uart.h>
 #include "tasks.h"
 
+K_MSGQ_DEFINE(random_dev, sizeof(uint64_t), 4, sizeof(uint64_t));
 
 /*
  * ISR that deposits random numbers obtained from Arduino IMU.
  */
 void uart_noise_rx(const struct device *dev, void *usr)
 {
+#if EXTERNAL_NOISE > 0
 	static uint8_t buf[8];
 	static uint8_t idx = 0;
 	
@@ -43,17 +46,31 @@ void uart_noise_rx(const struct device *dev, void *usr)
 		
 		k_msgq_put(&random_dev, &r, K_NO_WAIT);
 	}
+#endif /* EXTERNAL_NOISE */
+}
+
+static inline void inject_random_fault(uint64_t seed)
+{
+
 }
 
 void fault_injector_task(void *p1, void *p2, void *p3)
 {
-	uint8_t noise_byte;
+	uint64_t seed = 0xdeadfa11deafbeef;
+	int st = 1;
 
 	while (1) {
-		if (k_msgq_get(&random_dev, &noise_byte, K_FOREVER) == 0) {
-			k_mutex_lock(&fault_state_mutex, K_FOREVER);
-			// todo
-			k_mutex_unlock(&fault_state_mutex);
+		#if EXTERNAL_NOISE > 0
+		st = k_msgq_get(&random_dev, &seed, K_MSEC(JOKER_PATIENCE_MS));
+		#endif
+
+		/* Fallback to xorshift if Arduino timed out */
+		if (st != 0) {
+			seed ^= seed << 13;
+			seed ^= seed >> 17;
+			seed ^= seed << 5;
 		}
+
+		inject_random_fault(seed);
 	}
 }
