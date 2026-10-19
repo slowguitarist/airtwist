@@ -10,34 +10,45 @@
 
 K_THREAD_DEFINE(
 	sensor_task_id,
-	1024,
+	FAIR_TASK_STACK,
 	sensor_task,
 	NULL,
 	NULL,
 	NULL,
-	5,
+	FAIR_TASK_PRIO,
 	0,
 	0
 );
 K_THREAD_DEFINE(
 	fault_injector_task_id,
-	1024,
+	FAIR_TASK_STACK,
 	fault_injector_task,
 	NULL,
 	NULL,
 	NULL,
-	5,
+	FAIR_TASK_PRIO,
 	0,
 	0
 );
 K_THREAD_DEFINE(
 	simulant_task_id,
-	2048,
+	FAIR_TASK_STACK,
 	simulant_task,
 	NULL,
 	NULL,
 	NULL,
-	5,
+	FAIR_TASK_PRIO,
+	0,
+	0
+);
+K_THREAD_DEFINE(
+	pi_impsoter_task_id,
+	FAIR_TASK_STACK,
+	pi_imposter_task,
+        NULL,
+	NULL,
+	NULL,
+	PI_IMPOSTER_PRIO,
 	0,
 	0
 );

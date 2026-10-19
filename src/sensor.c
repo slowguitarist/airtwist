@@ -149,7 +149,7 @@ void sensor_task(void *, void *, void *)
 
 	const uint32_t poll_interval_ms = calculate_polling_rate(&g_odr);
 
-	IRQ_CONNECT(MS_SIM_SW_IRQ, MS_SIM_SW_IRQ_PRIORITY, sim_readiness_isr, NULL, 0);
+	IRQ_CONNECT(MS_SIM_SW_IRQ, MS_SIM_SW_IRQ_PRIO, sim_readiness_isr, NULL, 0);
 	k_irq_enable(MS_SIM_SW_IRQ);
 
 	MsSim *sim = ms_sim_new_skewed(g_sim_buf, &g_odr, 0.5f, MS_ENV_FURNAS, 1000);
