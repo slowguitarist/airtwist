@@ -11,7 +11,7 @@
 #define FAIR_TASK_PRIO		5
 #define FAIR_TASK_STACK		8192
 
-#define EXTERNAL_NOISE          0
+#define EXTERNAL_NOISE          1
 
 #define MS_SIM_BUF_MAX_SIZE	32768
 #define IMU_DEVICES             3
@@ -83,8 +83,6 @@ SetKind get_sim_packets(SimBatch *sb);
 /* UART "Noise receiver" */
 
 extern const struct device *noise_rcv;
-
-extern struct k_msgq random_dev;
 
 void uart_noise_rx(const struct device *dev, void *usr);
 
