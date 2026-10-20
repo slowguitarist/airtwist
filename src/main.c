@@ -57,7 +57,7 @@ K_THREAD_DEFINE(
 /*
  * Simulated random device via message queue from ISR to fault injector.
  */
-K_MSGQ_DEFINE(random_dev, sizeof(uint64_t), 64, 8);
+K_MSGQ_DEFINE(random_dev, sizeof(uint64_t), 64, sizeof(uint64_t));
 
 /*
  * UART receiver structure (initialized by Zephyr).
