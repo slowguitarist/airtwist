@@ -84,6 +84,8 @@ SetKind get_sim_packets(SimBatch *sb);
 
 extern const struct device *noise_rcv;
 
+extern struct k_msgq random_dev;
+
 void uart_noise_rx(const struct device *dev, void *usr);
 
 #endif // TASKS_H

@@ -16,7 +16,6 @@
 #include "zephyr/irq.h"
 #include "zephyr/sleep.h"
 
-K_MSGQ_DEFINE(random_dev, sizeof(uint64_t), 4, sizeof(uint64_t));
 /*
  * OS-level sync for controlled priority inversions.
  */
@@ -131,9 +130,10 @@ static inline void inject_random_fault(uint64_t seed)
 void fault_injector_task(void *p1, void *p2, void *p3)
 {
 	uint64_t seed = 0xdeadfa11deafbeef;
-	int st = 1;
 
 	for (;;) {
+		int st = 1;
+		
 		#if EXTERNAL_NOISE > 0
 		st = k_msgq_get(&random_dev, &seed, K_MSEC(FI_PATIENCE_MS));
 		#endif
