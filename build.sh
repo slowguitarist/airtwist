@@ -16,8 +16,6 @@ case "${1:-}" in
 	nano)
 		PLATFORM="arduino"
 		BOARD="arduino:samd:nano_33_iot"
-		CHIP="ATSAMD21G18A"
-		ELF="$BUILD_DIR/arduino/noisegenerator.ino.elf"
 		;;
 	*)
 		echo "Unrecognized board -- please add it to build.sh."
@@ -26,6 +24,7 @@ case "${1:-}" in
 esac
 
 ACTION="${2:-build}"
+ARDUINO_PORT="/dev/ttyACM0"
 shift 2 || true
 
 if [[ "${1:-}" == "--" ]]; then
@@ -36,11 +35,6 @@ CMAKE_ARGS=(
 	"-DCONF_FILE=zephyr-kconfig"
 	"-DZEPHYR_TOOLCHAIN_VARIANT=gnuarmemb"
 	"-DGNUARMEMB_TOOLCHAIN_PATH=/usr"
-)
-
-ARDUINO_ARGS=(
-	--build-property
-	compiler.c.elf.extra_flags=-latomic
 )
 
 CMAKE_ARGS+=("$@")
@@ -83,15 +77,15 @@ case "$ACTION" in
 		elif [[ "$PLATFORM" == "arduino" ]]; then
 			arduino-cli compile \
 				--fqbn "$BOARD" \
+				--port "$ARDUINO_PORT" \
 				--build-path "$BUILD_DIR/arduino" \
 				"$ROOT/noise-generator"
 
-            arduino-cli compile \
-                --only-compilation-database \
-                --fqbn "$BOARD" \
-                --build-path "$BUILD_DIR/arduino-clangd" \
-                "${ARDUINO_ARGS[@]}" \
-                "$ROOT/noise-generator"
+			arduino-cli compile \
+				--only-compilation-database \
+				--fqbn "$BOARD" \
+				--build-path "$BUILD_DIR/arduino-clangd" \
+				"$ROOT/noise-generator"
 		fi
 		;;
 
@@ -103,17 +97,18 @@ case "$ACTION" in
 				. \
 				-d "$BUILD_DIR" \
 				-- "${CMAKE_ARGS[@]}"
+
+			probe-rs download \
+				--chip "$CHIP" \
+				"$ELF"
 		elif [[ "$PLATFORM" == "arduino" ]]; then
 			arduino-cli compile \
+				--upload \
 				--fqbn "$BOARD" \
+				--port "$ARDUINO_PORT" \
 				--build-path "$BUILD_DIR/arduino" \
-                "${ARDUINO_ARGS[@]}" \
 				"$ROOT/noise-generator"
 		fi
-
-		probe-rs download \
-			--chip "$CHIP" \
-			"$ELF"
 		;;
 
 	*)
