@@ -138,6 +138,8 @@ static inline void async_post_reading(uint32_t ts, SimPacket pkt)
 
 void sensor_task(void *, void *, void *)
 {
+	printk("Starting sensor task.\n");
+
 	SimPacket buf[NumDevices] = {
 		[0] = {.kind = Accel},
 		[1] = {.kind = Gyro},

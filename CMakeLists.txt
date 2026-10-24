@@ -10,7 +10,7 @@ project(airtwist)
 # Memsonic
 set(MEMSONIC_RS_TARGET "thumbv8m.main-none-eabihf")
 set(MEMSONIC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../memsonic")
-set(MEMSONIC_PROFILE "release")
+set(MEMSONIC_PROFILE "debug")
 set(MEMSONIC_LIB
     "${MEMSONIC_DIR}/target/${MEMSONIC_RS_TARGET}/${MEMSONIC_PROFILE}/libmemsonic.a")
 
@@ -18,7 +18,6 @@ set(MEMSONIC_LIB
 add_custom_command(
     OUTPUT  "${MEMSONIC_LIB}"
     COMMAND cargo build
-            --release
             --features ffi
             --target "${MEMSONIC_RS_TARGET}"
     WORKING_DIRECTORY "${MEMSONIC_DIR}"

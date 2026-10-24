@@ -3,15 +3,25 @@
  */
 
 #include <stdint.h>
+#include <stdio.h>
+
 #include <zephyr/kernel.h>
 #include <zephyr/device.h>
 #include <zephyr/drivers/uart.h>
+#include "zephyr/sleep.h"
+#include "zephyr/sys/printk.h"
+
 #include "tasks.h"
+
+void memsonic_panic_report(const uint8_t *file, size_t len, uint32_t line)
+{
+	printk("Rust panic at %.*s:%u\n", (int)len, (const char *)file, line);
+}
 
 
 K_THREAD_DEFINE(
 	sensor_task_id,
-	FAIR_TASK_STACK,
+	SENSOR_TASK_STACK,
 	sensor_task,
 	NULL,
 	NULL,
@@ -69,6 +79,8 @@ const struct device *noise_rcv;
 
 int main(void)
 {
+	printk("Starting the simulation...\n");
+
 #if EXTERNAL_NOISE > 0
 	noise_rcv = DEVICE_DT_GET(DT_ALIAS(noisegen));
 	if (!device_is_ready(noise_rcv))

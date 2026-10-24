@@ -2,26 +2,30 @@
  * Simulant task. It is dedicated entirely to running filters.
  */
 
-#include <zephyr/kernel.h>
 #include <zephyr/device.h>
+#include <zephyr/kernel.h>
+#include <zephyr/sys/printk.h>
+
 #include "memsonic.h"
+
 #include "tasks.h"
-#include "zephyr/sys/printk.h"
 
 void ekf_predict(MsXYZ acc, MsXYZ gyr, float elapsed_ms)
 {
-	printk("Predict, elapsed %f", (double)elapsed_ms);
-	printk("A [%f, %f, %f]", (double)acc.x, (double)acc.y, (double)acc.z);
-	printk("G [%f, %f, %f]", (double)gyr.x, (double)gyr.y, (double)gyr.z);
+	printk("Predict, elapsed %f\n", (double)elapsed_ms);
+	printk("A [%f, %f, %f]\n", (double)acc.x, (double)acc.y, (double)acc.z);
+	printk("G [%f, %f, %f]\n", (double)gyr.x, (double)gyr.y, (double)gyr.z);
 }
 
 void ekf_update(float pressure)
 {
-	printk("Update, B %f", (double)pressure);
+	printk("Update, B %f\n", (double)pressure);
 }
 
 void simulant_task(void *, void *, void *)
 {
+	printk("Starting simulant task.\n");
+
 	SimBatch sb = {0};
 	uint32_t last_ts = 0;
 

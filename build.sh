@@ -24,7 +24,7 @@ case "${1:-}" in
 esac
 
 ACTION="${2:-build}"
-ARDUINO_PORT="/dev/ttyACM0"
+DEFAULT_PORT="/dev/ttyACM0"
 shift 2 || true
 
 if [[ "${1:-}" == "--" ]]; then
@@ -77,7 +77,7 @@ case "$ACTION" in
 		elif [[ "$PLATFORM" == "arduino" ]]; then
 			arduino-cli compile \
 				--fqbn "$BOARD" \
-				--port "$ARDUINO_PORT" \
+				--port "$DEFAULT_PORT" \
 				--build-path "$BUILD_DIR/arduino" \
 				"$ROOT/noise-generator"
 

@@ -9,12 +9,14 @@
 ⠀⠀⠀⠀⠠⠮⠚⠁⠀⠑⠢⠵⠄    */
 
 #include <stdint.h>
-#include <zephyr/kernel.h>
+
 #include <zephyr/device.h>
 #include <zephyr/drivers/uart.h>
+#include <zephyr/irq.h>
+#include <zephyr/kernel.h>
+#include <zephyr/sleep.h>
+
 #include "tasks.h"
-#include "zephyr/irq.h"
-#include "zephyr/sleep.h"
 
 /*
  * OS-level sync for controlled priority inversions.
@@ -129,6 +131,8 @@ static inline void inject_random_fault(uint64_t seed)
 
 void fault_injector_task(void *p1, void *p2, void *p3)
 {
+	printk("Starting fault injector task.\n");
+	
 	uint64_t seed = 0xdeadfa11deafbeef;
 
 	for (;;) {

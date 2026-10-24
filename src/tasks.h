@@ -11,6 +11,8 @@
 #define FAIR_TASK_PRIO		5
 #define FAIR_TASK_STACK		8192
 
+#define SENSOR_TASK_STACK	131072
+
 #define EXTERNAL_NOISE          1
 
 #define MS_SIM_BUF_MAX_SIZE	32768

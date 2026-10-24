@@ -1,0 +1,14 @@
+{
+	"folders": [
+		{
+			"path": ".."
+		},
+		{ "path": "../../memsonic" }
+	],
+	"settings": {
+		"clangd.arguments": [
+			"--compile-commands-dir=build/arduino-clangd",
+			"--compile-commands-dir=build"
+		]
+	}
+}
