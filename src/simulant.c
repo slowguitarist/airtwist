@@ -27,19 +27,19 @@ void simulant_task(void *, void *, void *)
 	printk("Starting simulant task.\n");
 
 	SimBatch sb = {0};
-	uint32_t last_ts = 0;
+	uint32_t last_ts = MS_SIM_DELAY_MS;
 
 	for (;;) {
 		/* Will likely suspend in this call */
 		SetKind sk = get_sim_packets(&sb);
 
-		if (sk > 1) {
+		if ((sk & SetPredict) == SetPredict) {
 			uint32_t elapsed = sb.p[Accel].ts - last_ts;
 			last_ts = sb.p[Accel].ts;
 			ekf_predict(sb.p[Accel].v.xyz, sb.p[Gyro].v.xyz, elapsed);
 		}
 
-		if (sk & 1) {
+		if ((sk & SetUpdate) == SetUpdate) {
 			ekf_update(sb.p[Baro].v.prs);
 		}
 	}

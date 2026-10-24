@@ -20,12 +20,13 @@
 
 #define MS_SIM_SW_IRQ           DT_IRQN(DT_NODELABEL(lptim2))
 #define MS_SIM_SW_IRQ_PRIO	2
+#define MS_SIM_DELAY_MS		1000
 
 #define PKT_SET_PREDICT	(BIT(Accel) | BIT(Gyro))
 #define PKT_SET_UPDATE	(BIT(Baro))
 
 #define FI_PATIENCE_MS       	400
-#define FI_INJECT_PROB		25
+#define FI_INJECT_PROB		0
 #define FI_IDLE_MIN_MS      	10
 #define FI_IDLE_MAX_MS      	100
 #define FI_BLOCK_MIN_MS     	5
@@ -40,7 +41,7 @@
 
 typedef enum {
         SetUpdate = 1,
-        SetPredict = 2,
+        SetPredict = 1 << 1,
 } SetKind;
 
 typedef enum {

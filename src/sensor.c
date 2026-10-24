@@ -18,6 +18,7 @@
 
 /* Task-local globals */
 
+/* TODO: MCU does not keep up with these rates. Use CORDIC and boost clock. */
 static MsODR g_odr = {
 	.acc = 5.0f,
 	.gyr = 5.0f,
@@ -45,16 +46,16 @@ static SimPacket g_inbox[NumDevices];
 SetKind get_sim_packets(SimBatch *sb)
 {
 	k_sem_take(&g_set_waker, K_FOREVER);
-	/* Semaphore guarantees happens-before */
-	SetKind sk = atomic_load_explicit(&g_set_drdy, memory_order_relaxed);
+
+	SetKind sk = atomic_exchange_explicit(&g_set_drdy, 0, memory_order_relaxed);
 
 	k_spinlock_key_t key = k_spin_lock(&g_inbox_lock);
 	
-	if (sk & 1) {
+	if ((sk & SetUpdate) == SetUpdate) {
 		sb->p[Baro] = g_inbox[Baro];
 	}
 
-	if (sk > 1) {
+	if ((sk & SetPredict) == SetPredict) {
 		sb->p[Accel] = g_inbox[Accel];
 		sb->p[Gyro] = g_inbox[Gyro];
 	}
@@ -82,19 +83,21 @@ static inline void append_targets(MsSim *sim)
 
 static inline uint32_t calculate_polling_rate(MsODR *odr)
 {
-	if (odr->acc <= 0.f)
-		odr->acc = 0.f;
-	if (odr->gyr <= 0.f)
-		odr->gyr = 0.f;
-	if (odr->mag <= 0.f)
-		odr->mag = 0.f;
-	if (odr->bar <= 0.f)
-		odr->bar = 0.f;
+	float min_odr = 1e32f;
+	
+	if (odr->acc > 0.f && odr->acc < min_odr)
+		min_odr = odr->acc;
+	if (odr->gyr > 0.f && odr->gyr < min_odr)
+		min_odr = odr->gyr;
+	if (odr->mag > 0.f && odr->mag < min_odr)
+		min_odr = odr->mag;
+	if (odr->bar > 0.f && odr->bar < min_odr)
+		min_odr = odr->bar;
 
 	/* Divide by 5 to avoid falling behind on calculations.
-	 * 0 would yield instead of sleeping, which is necessary to keep simulation running.
+	 * 0 would mean inactive simulation (large polling interval).
 	 */
-	return (uint32_t)(MIN(odr->acc, MIN(odr->gyr, MIN(odr->mag, odr->bar))) / 5);
+	return (uint32_t)(min_odr / 5.f);
 }
 
 
@@ -110,20 +113,19 @@ static void sim_readiness_isr(const void *)
 	const uint32_t mask =
 		atomic_exchange_explicit(&g_stage_mask, 0, memory_order_acq_rel);
 
-	if (mask & PKT_SET_PREDICT)
-		drdy += SetPredict;
+	if ((mask & PKT_SET_PREDICT) == PKT_SET_PREDICT)
+		drdy |= SetPredict;
 
-	if (mask & PKT_SET_UPDATE)
-		drdy += SetUpdate;
+	if ((mask & PKT_SET_UPDATE) == PKT_SET_UPDATE)
+		drdy |= SetUpdate;
 
 	if (drdy != 0) {
-		/* Semaphore guarantees happens-before */
 		atomic_store_explicit(&g_set_drdy, drdy, memory_order_relaxed);
 		k_sem_give(&g_set_waker);
 	}
 }
 
-static inline void async_post_reading(uint32_t ts, SimPacket pkt)
+static inline void post_reading(uint32_t ts, SimPacket pkt)
 {
 	pkt.ts = ts;
 
@@ -132,8 +134,7 @@ static inline void async_post_reading(uint32_t ts, SimPacket pkt)
 	k_spin_unlock(&g_inbox_lock, key);
 
 	atomic_fetch_or_explicit(&g_stage_mask, BIT(pkt.kind), memory_order_release);
-	// Fake latch source.
-	k_irq_set_pending(MS_SIM_SW_IRQ);
+	/* Removed k_irq_set_pending here so packets can batch together */
 }
 
 void sensor_task(void *, void *, void *)
@@ -154,7 +155,8 @@ void sensor_task(void *, void *, void *)
 	IRQ_CONNECT(MS_SIM_SW_IRQ, MS_SIM_SW_IRQ_PRIO, sim_readiness_isr, NULL, 0);
 	k_irq_enable(MS_SIM_SW_IRQ);
 
-	MsSim *sim = ms_sim_new_skewed(g_sim_buf, &g_odr, 0.5f, MS_ENV_FURNAS, 1000);
+	MsSim *sim =
+		ms_sim_new_skewed(g_sim_buf, &g_odr, 0.5f, MS_ENV_FURNAS, MS_SIM_DELAY_MS);
 
   	append_targets(sim);
 
@@ -168,10 +170,17 @@ void sensor_task(void *, void *, void *)
 		local_drdy[Mag] = ms_sim_magfield(sim, ts, &buf[Mag].v.xyz);
 		local_drdy[Baro] = ms_sim_pressure(sim, ts, &buf[Baro].v.prs);
 
+		bool new_data = false;
 		for (PostKind i = 0; i < NumDevices; ++i) {
-			if (local_drdy[i].val == MS_READY_NEW.val)
-				async_post_reading(ts, buf[i]);
+			if (local_drdy[i].val == MS_READY_NEW.val) {
+				post_reading(ts, buf[i]);
+				new_data = true;
+			}
 		}
+
+		/* Pend interrupt once per batch */
+		if (new_data)
+			k_irq_set_pending(MS_SIM_SW_IRQ);
 
     		k_msleep(poll_interval_ms);
   	}

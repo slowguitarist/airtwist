@@ -8,7 +8,6 @@
 #include <zephyr/kernel.h>
 #include <zephyr/device.h>
 #include <zephyr/drivers/uart.h>
-#include "zephyr/sleep.h"
 #include "zephyr/sys/printk.h"
 
 #include "tasks.h"
