@@ -105,7 +105,7 @@ case "$ACTION" in
 			arduino-cli compile \
 				--upload \
 				--fqbn "$BOARD" \
-				--port "$ARDUINO_PORT" \
+				--port "$DEFAULT_PORT" \
 				--build-path "$BUILD_DIR/arduino" \
 				"$ROOT/noise-generator"
 		fi
