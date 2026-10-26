@@ -15,6 +15,7 @@
 #include <zephyr/irq.h>
 #include <zephyr/kernel.h>
 #include <zephyr/sleep.h>
+#include <zephyr/sys/printk.h>
 
 #include "tasks.h"
 
@@ -144,6 +145,10 @@ void fault_injector_task(void *p1, void *p2, void *p3)
 
 		/* Fallback to xorshift if Arduino timed out */
 		if (st != 0) {
+			#ifndef NDEBUG
+				printk("Fell back to xorshift");
+			#endif
+
 			seed ^= seed << 13;
 			seed ^= seed >> 17;
 			seed ^= seed << 5;

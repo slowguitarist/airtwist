@@ -134,7 +134,6 @@ static inline void post_reading(uint32_t ts, SimPacket pkt)
 	k_spin_unlock(&g_inbox_lock, key);
 
 	atomic_fetch_or_explicit(&g_stage_mask, BIT(pkt.kind), memory_order_release);
-	/* Removed k_irq_set_pending here so packets can batch together */
 }
 
 void sensor_task(void *, void *, void *)

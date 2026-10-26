@@ -3,18 +3,26 @@
  */
 
 #include <stdint.h>
-#include <stdio.h>
 
 #include <zephyr/kernel.h>
 #include <zephyr/device.h>
 #include <zephyr/drivers/uart.h>
-#include "zephyr/sys/printk.h"
+#include <zephyr/sleep.h>
+#include <zephyr/sys/printk.h>
 
 #include "tasks.h"
 
 void memsonic_panic_report(const uint8_t *file, size_t len, uint32_t line)
 {
 	printk("Rust panic at %.*s:%u\n", (int)len, (const char *)file, line);
+}
+
+void local_panic(const char *msg)
+{
+	for (;;) {
+		printk("Local panic due to %s", msg);
+		k_msleep(1000);
+	}
 }
 
 
@@ -82,12 +90,15 @@ int main(void)
 
 #if EXTERNAL_NOISE > 0
 	noise_rcv = DEVICE_DT_GET(DT_ALIAS(noisegen));
+	
 	if (!device_is_ready(noise_rcv))
-		return -ENODEV;
+		local_panic("failure finding UART peripheral.");
 
-	uart_irq_callback_set(noise_rcv, uart_noise_rx);
+	if (uart_irq_callback_set(noise_rcv, uart_noise_rx) < 0)
+		local_panic("failure registering UART callback");
+
 	uart_irq_rx_enable(noise_rcv);
-#endif /* EXTERNAL_NOISE */
+#endif
 
 	return 0;
 }
