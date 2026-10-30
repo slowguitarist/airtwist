@@ -7,7 +7,7 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BUILD_DIR="$ROOT/build"
 
 case "${1:-}" in
-	nucleo)
+	host)
 		PLATFORM="zephyr"
 		BOARD="nucleo_u545re_q"
 		CHIP="STM32U545RETx"

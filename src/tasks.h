@@ -25,6 +25,8 @@
 #define PKT_SET_PREDICT	(BIT(Accel) | BIT(Gyro))
 #define PKT_SET_UPDATE	(BIT(Baro))
 
+/* User options */
+
 #define FI_PATIENCE_MS       	400
 #define FI_INJECT_PROB		0
 #define FI_IDLE_MIN_MS      	10
