@@ -13,7 +13,9 @@ Obtain Zephyr and probe-rs IDs for your target, and replace `BOARD` and `CHIP` i
 [build script](./build.sh), respectively. If using QEMU, Zephyr ID is `native_sim` and
 probe-rs is not needed.
 
-Build: `./build.sh host build`; build and flash (non-QEMU): `./build.sh host flash`.
+Build: `./build.sh host build`, or
+
+Build and flash (probe): `./build.sh host flash`.
 
 ## Running simulations
 
@@ -30,7 +32,7 @@ Assuming embedded GDB is used:
 probe-rs gdb --chip {CHIP} --protocol swd
 ```
 
-4. Run the debugger and reset the target:
+5. Run the debugger and reset the target:
 ```
 arm-none-eabi-gdb build/zephyr/zephyr.elf
 (gdb) target remote localhost:1337
