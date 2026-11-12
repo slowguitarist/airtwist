@@ -16,6 +16,7 @@
 
 #define EKF_BARO_VARIANCE 0.1f
 #define GRAVITY_SI        9.81f
+#define PI                3.14159f
 
 #define EKF_BIAS_GYRO_X   0.0f
 #define EKF_BIAS_GYRO_Y   0.0f
@@ -80,9 +81,9 @@ static void eskf_init(eskf_t *f) {
 }
 
 static void eskf_predict(eskf_t *f, const float u[6], float dt) {
-        float wx = u[3] - f->x[3];
-        float wy = u[4] - f->x[4];
-        float wz = u[5] - f->x[5];
+        float wx = (u[3] - f->x[3]) * PI / 180.0f;
+        float wy = (u[4] - f->x[4]) * PI / 180.0f;
+        float wz = (u[5] - f->x[5]) * PI / 180.0f;
 
         const float Omega[16] = {
                 0.0f, -wx, -wy, -wz,
@@ -155,7 +156,11 @@ void simulant_task(void *, void *, void *) {
 
         SimBatch sb = {0};
         uint32_t last_ts = 0;
+
 	bool pred_init = false;
+        bool upd_init = false;
+
+        float gnd_pressure = 0.f;
 
         for (;;) {
                 SetKind sk = get_sim_packets(&sb);
@@ -187,18 +192,27 @@ void simulant_task(void *, void *, void *) {
                 }
 
                 if ((sk & SetUpdate) == SetUpdate) {
-                        float z = sb.p[Baro].v.prs;
-                        eskf_update(&ekf, z);
+                        float prs = sb.p[Baro].v.prs;
+
+                        if (!upd_init) {
+                                upd_init = true;
+                                gnd_pressure = prs;
+                                continue;
+                        }
+
+                        float alt = 44330.0f * (1.0f - powf(prs / gnd_pressure, 1.0f / 5.255f));
+
+                        eskf_update(&ekf, alt);
+
+                        printk(
+                                "[ESKF] pz: %f, vz: %f, quat: %f %f %f %f\n",
+                                (double)ekf.x[0],
+                                (double)ekf.x[1],
+                                (double)ekf.q[0],
+                                (double)ekf.q[1],
+                                (double)ekf.q[2],
+                                (double)ekf.q[3]
+                        );
                 }
         }
-
-	printk(
-		"[ESKF] pz: %f, vz: %f, quat: %f %f %f %f\n",
-		(double)ekf.x[0],
-		(double)ekf.x[1],
-		(double)ekf.q[0],
-		(double)ekf.q[1],
-		(double)ekf.q[2],
-		(double)ekf.q[3]
-	);
 }

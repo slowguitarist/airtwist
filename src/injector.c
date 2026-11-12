@@ -145,18 +145,10 @@ void fault_injector_task(void *p1, void *p2, void *p3)
 
 		/* Fallback to xorshift if Arduino timed out */
 		if (st != 0) {
-			#ifndef NDEBUG
-				printk("\nnot noiz\n\n");
-			#endif
-
 			seed ^= seed << 13;
 			seed ^= seed >> 17;
 			seed ^= seed << 5;
 		}
-
-		#ifndef NDEBUG
-			printk("\nnoiz\n\n");
-		#endif
 
 		inject_random_fault(seed);
 	}
