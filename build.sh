@@ -47,6 +47,8 @@ case "$ACTION" in
 			arduino-cli lib install Arduino_LSM6DS3
 			arduino-cli lib install "SAMD_TimerInterrupt"
         elif [[ "$PLATFORM" == "zephyr" ]]; then
+            rustup default stable
+            rustup target add thumbv8m.main-none-eabihf
 			python -m venv .venv
             source .venv/bin/activate
             python -m pip install west jsonschema pyelftools
