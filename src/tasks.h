@@ -27,16 +27,16 @@
 
 /* User options */
 
-#define FI_PATIENCE_MS       	400
-#define FI_INJECT_PROB		0
+#define FI_PATIENCE_MS       	100
+#define FI_INJECT_PROB        50
 #define FI_IDLE_MIN_MS      	10
-#define FI_IDLE_MAX_MS      	100
-#define FI_BLOCK_MIN_MS     	5
+#define FI_IDLE_MAX_MS      	50
+#define FI_BLOCK_MIN_MS     	40
 #define FI_BLOCK_MAX_MS     	50
-#define FI_PI_MIN_MS        	5
+#define FI_PI_MIN_MS        	20
 #define FI_PI_MAX_MS        	50
-#define FI_IRQ_MIN_MS       	5
-#define FI_IRQ_MAX_MS       	20
+#define FI_IRQ_MIN_MS       	30
+#define FI_IRQ_MAX_MS       	50
 #define PI_IMPOSTER_PRIO	(FAIR_TASK_PRIO + 1)
 
 /* Sensor data communication wrappers */

@@ -18,12 +18,11 @@
 
 /* Task-local globals */
 
-/* TODO: MCU does not keep up with these rates. Use CORDIC and boost clock. */
 static MsODR g_odr = {
-	.acc = 5.0f,
-	.gyr = 5.0f,
+	.acc = 10.0f,
+	.gyr = 10.0f,
 	.mag = 0.0f,
-	.bar = 30.0f
+	.bar = 35.0f
 };
 
 static uint8_t MS_ALIGN g_sim_buf[MS_SIM_BUF_MAX_SIZE];
