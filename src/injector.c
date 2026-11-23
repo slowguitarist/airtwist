@@ -103,34 +103,35 @@ void pi_imposter_task(void *, void *, void *)
 	}
 }
 
-static inline void inject_random_fault(uint64_t seed)
+static inline void inject_random_fault(uint64_t *seed)
 {
-	if (next_rand(&seed) % 100U >= FI_INJECT_PROB) {
-		k_sleep(K_MSEC(rand_range(&seed, FI_IDLE_MIN_MS, FI_IDLE_MAX_MS)));
+	if (next_rand(seed) % 100U >= FI_INJECT_PROB) {
+		k_sleep(K_MSEC(rand_range(seed, FI_IDLE_MIN_MS, FI_IDLE_MAX_MS)));
 		return;
 	}
 
-	switch (next_rand(&seed) % 3U) {
+	switch (next_rand(seed) % 3U) {
 	case 0:
-		uint32_t ms = rand_range(&seed, FI_BLOCK_MIN_MS, FI_BLOCK_MAX_MS);
+		uint32_t ms = rand_range(seed, FI_BLOCK_MIN_MS, FI_BLOCK_MAX_MS);
 		k_busy_wait(ms * 1000U);
 		break;
 	case 1:
-		pi_duration_ms = rand_range(&seed, FI_PI_MIN_MS, FI_PI_MAX_MS);
+		pi_duration_ms = rand_range(seed, FI_PI_MIN_MS, FI_PI_MAX_MS);
 		k_sem_give(&pi_request);
 		k_sem_take(&pi_locked, K_FOREVER);
+    k_busy_wait(pi_duration_ms * 1000U);
 		k_mutex_lock(&pi_mutex, K_FOREVER);
 		k_mutex_unlock(&pi_mutex);
 		break;
 	case 2:
 		irq_disable(MS_SIM_SW_IRQ);
-		k_sleep(K_MSEC(rand_range(&seed, FI_IRQ_MIN_MS, FI_IRQ_MAX_MS)));
+    k_busy_wait(rand_range(seed, FI_IRQ_MIN_MS, FI_IRQ_MAX_MS) * 1000U);
 		irq_enable(MS_SIM_SW_IRQ);
 		break;
 	}
 }
 
-void fault_injector_task(void *p1, void *p2, void *p3)
+void fault_injector_task(void *, void *, void *)
 {
 	printk("Starting fault injector task.\n");
 	
@@ -143,13 +144,11 @@ void fault_injector_task(void *p1, void *p2, void *p3)
 		st = k_msgq_get(&random_dev, &seed, K_MSEC(FI_PATIENCE_MS));
 		#endif
 
-		/* Fallback to xorshift if Arduino timed out */
+		/* Fallback to splitmix64 if Arduino timed out */
 		if (st != 0) {
-			seed ^= seed << 13;
-			seed ^= seed >> 17;
-			seed ^= seed << 5;
+			seed = next_rand(&seed);
 		}
 
-		inject_random_fault(seed);
+		inject_random_fault(&seed);
 	}
 }
