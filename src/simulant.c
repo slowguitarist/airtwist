@@ -28,7 +28,7 @@ typedef struct {
         float x[EKF_STATE];
         float P[EKF_STATE * EKF_STATE];
         float q[4];
-} eskf_t;
+} ekf_t;
 
 /* Helpers */
 
@@ -59,7 +59,7 @@ static void quat_normalize(float q[4]) {
 
 /* ESKF */
 
-static void eskf_init(eskf_t *f) {
+static void ekf_init(ekf_t *f) {
         f->x[0] = 0.0f; // pz
         f->x[1] = 0.0f; // vz
         f->x[2] = EKF_BIAS_ACCL_Z;
@@ -161,7 +161,7 @@ static void predict_covariance_buggy(
         }
 }
 
-static void eskf_predict(eskf_t *f, const float u[6], float dt) {
+static void ekf_predict(ekf_t *f, const float u[6], float dt) {
         float wx = (u[3] - f->x[3]) * PI / 180.0f;
         float wy = (u[4] - f->x[4]) * PI / 180.0f;
         float wz = (u[5] - f->x[5]) * PI / 180.0f;
@@ -211,7 +211,7 @@ static void eskf_predict(eskf_t *f, const float u[6], float dt) {
         }
 }
 
-static void eskf_update(eskf_t *f, float z) {
+static void ekf_update(ekf_t *f, float z) {
         float y = z - f->x[0];
         float S_inv = 1.0f / (f->P[0] + EKF_BARO_VARIANCE);
 
@@ -237,8 +237,8 @@ static void eskf_update(eskf_t *f, float z) {
 void simulant_task(void *, void *, void *) {
         printk("Starting simulant task.\n");
 
-        eskf_t ekf;
-        eskf_init(&ekf);
+        ekf_t ekf;
+        ekf_init(&ekf);
 
         SimBatch sb = {0};
         uint32_t last_ts = 0;
@@ -274,7 +274,7 @@ void simulant_task(void *, void *, void *) {
                                 sb.p[Gyro].v.xyz.z
                         };
 
-                        eskf_predict(&ekf, u, dt);
+                        ekf_predict(&ekf, u, dt);
                 }
 
                 if ((sk & SetUpdate) == SetUpdate) {
@@ -289,7 +289,7 @@ void simulant_task(void *, void *, void *) {
                         // barometric formula
                         float alt = 44330.0f * (1.0f - powf(prs / gnd_pressure, 1.0f / 5.255f));
 
-                        eskf_update(&ekf, alt);
+                        ekf_update(&ekf, alt);
 
                         printk(
                                 "[ESKF] alt:%10.4f vel:%10.4f quat:%10.4f %10.4f %10.4f %10.4f\n",

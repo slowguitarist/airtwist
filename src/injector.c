@@ -98,6 +98,7 @@ void pi_imposter_task(void *, void *, void *)
 		/* Inversion occurs on this lock */
 		k_mutex_lock(&pi_mutex, K_FOREVER);
 		k_sem_give(&pi_locked);
+    k_busy_wait(pi_duration_ms * 1000U);
 		k_sleep(K_MSEC(pi_duration_ms));
 		k_mutex_unlock(&pi_mutex);
 	}
@@ -119,13 +120,12 @@ static inline void inject_random_fault(uint64_t *seed)
 		pi_duration_ms = rand_range(seed, FI_PI_MIN_MS, FI_PI_MAX_MS);
 		k_sem_give(&pi_request);
 		k_sem_take(&pi_locked, K_FOREVER);
-    k_busy_wait(pi_duration_ms * 1000U);
 		k_mutex_lock(&pi_mutex, K_FOREVER);
 		k_mutex_unlock(&pi_mutex);
 		break;
 	case 2:
 		irq_disable(MS_SIM_SW_IRQ);
-    k_busy_wait(rand_range(seed, FI_IRQ_MIN_MS, FI_IRQ_MAX_MS) * 1000U);
+    k_sleep(K_MSEC(rand_range(seed, FI_IRQ_MIN_MS, FI_IRQ_MAX_MS)));
 		irq_enable(MS_SIM_SW_IRQ);
 		break;
 	}
