@@ -14,7 +14,7 @@
 #define EKF_STATE 6
 #define EKF_OMEGA 4
 
-#define EKF_BARO_VARIANCE 0.1f
+#define EKF_BARO_VARIANCE 1.0f
 #define GRAVITY_SI        9.81f
 #define PI                3.14159f
 
@@ -30,20 +30,15 @@ typedef struct {
         float q[4];
 } eskf_t;
 
-static const float Q_DIAG[EKF_STATE] = {
-        1e-2f,  // pz
-        1e-2f,  // vz
-        1e-7f,  // baz
-        1e-10f, // bgx
-        1e-10f, // bgy
-        1e-10f  // bgz
-};
-
+/* Helpers */
 
 static void mat4_vec_mul(const float A[16], const float x[4], float y[4]) {
-        for (int i = 0; i < 4; i++) {
+        for (int i = 0; i < 4; i++)
+        {
                 y[i] = 0.0f;
-                for (int j = 0; j < 4; j++) {
+
+                for (int j = 0; j < 4; ++j)
+                {
                         y[i] += A[i * 4 + j] * x[j];
                 }
         }
@@ -51,13 +46,18 @@ static void mat4_vec_mul(const float A[16], const float x[4], float y[4]) {
 
 static void quat_normalize(float q[4]) {
         float norm = sqrtf(q[0]*q[0] + q[1]*q[1] + q[2]*q[2] + q[3]*q[3]);
+
         if (norm > 0.0f) {
                 float inv = 1.0f / norm;
-                for (int i = 0; i < 4; i++) {
+
+                for (int i = 0; i < 4; i++)
+                {
                         q[i] *= inv;
                 }
         }
 }
+
+/* ESKF */
 
 static void eskf_init(eskf_t *f) {
         f->x[0] = 0.0f; // pz
@@ -75,8 +75,89 @@ static void eskf_init(eskf_t *f) {
         for (int i = 0; i < EKF_STATE * EKF_STATE; i++) {
                 f->P[i] = 0.0f;
         }
-        for (int i = 0; i < EKF_STATE; i++) {
+
+        f->P[0] = 0.1f;
+        f->P[EKF_STATE + 1] = 0.01f;
+        f->P[2 * EKF_STATE + 2] = 0.02f;
+
+        for (int i = 3; i < EKF_STATE; i++) {
                 f->P[i * EKF_STATE + i] = 1.0f;
+        }
+}
+
+static void predict_covariance(
+        float P_next[EKF_STATE * EKF_STATE],
+        const float P[EKF_STATE * EKF_STATE],
+        float dt
+) {
+        float FP[EKF_STATE * EKF_STATE];
+
+        for (int j = 0; j < EKF_STATE; j++)
+        {
+                FP[j] = P[j] + dt * P[EKF_STATE + j];
+                FP[EKF_STATE + j] = P[EKF_STATE + j] - dt * P[2 * EKF_STATE + j];
+
+                for (int i = 2; i < EKF_STATE; i++)
+                {
+                        FP[i * EKF_STATE + j] = P[i * EKF_STATE + j];
+                }
+        }
+
+        for (int i = 0; i < EKF_STATE; ++i)
+        {
+                P_next[i * EKF_STATE] = FP[i * EKF_STATE] + dt * FP[i * EKF_STATE + 1];
+                P_next[i * EKF_STATE + 1] = FP[i * EKF_STATE + 1] - dt * FP[i * EKF_STATE + 2];
+
+                for (int j = 2; j < EKF_STATE; ++j)
+                {
+                        P_next[i * EKF_STATE + j] = FP[i * EKF_STATE + j];
+                }
+        }
+
+        float dt2 = dt * dt;
+        float dt3 = dt2 * dt;
+        float qa = 1.0f;
+        float qb = 1e-5f;
+
+        P_next[0] += qa * (dt3 / 3.0f);
+        P_next[1] += qa * (dt2 / 2.0f);
+        P_next[EKF_STATE] += qa * (dt2 / 2.0f);
+        P_next[EKF_STATE + 1] += qa * dt;
+        P_next[2 * EKF_STATE + 2] += qb * dt;
+}
+
+static void predict_covariance_buggy(
+        float P_next[EKF_STATE * EKF_STATE],
+        const float P[EKF_STATE * EKF_STATE],
+        float dt
+) {
+        const float Q_DIAG[EKF_STATE] = {
+                1e-2f,   // pz
+                1e-2f,   // vz
+                1e-7f,   // baz
+                1e-10f,  // bgx
+                1e-10f,  // bgy
+                1e-10f   // bgz
+        };
+
+        for (int i = 0; i < EKF_STATE * EKF_STATE; ++i)
+        {
+                P_next[i] = P[i];
+        }
+
+        for (int j = 0; j < EKF_STATE; ++j)
+        {
+                P_next[j] += dt * P[EKF_STATE + j];
+        }
+
+        for (int i = 0; i < EKF_STATE; ++i)
+        {
+                P_next[i * EKF_STATE + 1] += dt * P_next[i * EKF_STATE];
+        }
+
+        for (int i = 0; i < EKF_STATE * EKF_STATE; i += EKF_STATE + 1)
+        {
+                P_next[i] += Q_DIAG[i / (EKF_STATE + 1)];
         }
 }
 
@@ -93,11 +174,14 @@ static void eskf_predict(eskf_t *f, const float u[6], float dt) {
         };
 
         float q_dot[4];
+
         mat4_vec_mul(Omega, f->q, q_dot);
 
-        for (int i = 0; i < 4; i++) {
+        for (int i = 0; i < 4; ++i)
+        {
                 f->q[i] += 0.5f * dt * q_dot[i];
         }
+
         quat_normalize(f->q);
 
         float q0 = f->q[0], q1 = f->q[1], q2 = f->q[2], q3 = f->q[3];
@@ -109,24 +193,20 @@ static void eskf_predict(eskf_t *f, const float u[6], float dt) {
         float a_vert = (r13 * u[0] + r23 * u[1] + r33 * u[2]);
 
         f->x[0] += dt * f->x[1];
-        f->x[1] += dt * (a_vert - f->x[2] - GRAVITY_SI);
+        f->x[1] += dt * (a_vert - f->x[2] - GRAVITY_SI); 
 
         float P_next[EKF_STATE * EKF_STATE];
-        for (int i = 0; i < EKF_STATE * EKF_STATE; i++) {
-                P_next[i] = f->P[i];
+
+        const bool demo = false;
+
+        if (demo) {
+          predict_covariance_buggy(P_next, f->P, dt);
+        } else {
+          predict_covariance(P_next, f->P, dt);
         }
 
-        for (int j = 0; j < EKF_STATE; j++) {
-                P_next[j] += dt * f->P[EKF_STATE + j];
-        }
-        for (int i = 0; i < EKF_STATE; i++) {
-                P_next[i * EKF_STATE + 1] += dt * P_next[i * EKF_STATE];
-        }
-
-        for (int i = 0; i < EKF_STATE * EKF_STATE; i += (EKF_STATE + 1)) {
-                P_next[i] += Q_DIAG[i / (EKF_STATE + 1)];
-        }
-        for (int i = 0; i < EKF_STATE * EKF_STATE; i++) {
+        for (int i = 0; i < EKF_STATE * EKF_STATE; ++i)
+        {
                 f->P[i] = P_next[i];
         }
 }
@@ -136,28 +216,34 @@ static void eskf_update(eskf_t *f, float z) {
         float S_inv = 1.0f / (f->P[0] + EKF_BARO_VARIANCE);
 
         float K[EKF_STATE];
-        for (int i = 0; i < EKF_STATE; i++) {
+
+        for (int i = 0; i < EKF_STATE; ++i)
+        {
                 K[i] = f->P[i * EKF_STATE] * S_inv;
                 f->x[i] += K[i] * y;
         }
 
-        for (int i = 0; i < EKF_STATE; i++) {
-                for (int j = 0; j < EKF_STATE; j++) {
+        for (int i = 0; i < EKF_STATE; ++i)
+        {
+                for (int j = 0; j < EKF_STATE; ++j)
+                {
                         f->P[i * EKF_STATE + j] -= K[i] * f->P[j];
                 }
         }
 }
 
+/* Simulant (logistics) task */
+
 void simulant_task(void *, void *, void *) {
         printk("Starting simulant task.\n");
 
-	eskf_t ekf;
+        eskf_t ekf;
         eskf_init(&ekf);
 
         SimBatch sb = {0};
         uint32_t last_ts = 0;
 
-	bool pred_init = false;
+	      bool pred_init = false;
         bool upd_init = false;
 
         float gnd_pressure = 0.f;
@@ -166,7 +252,7 @@ void simulant_task(void *, void *, void *) {
                 SetKind sk = get_sim_packets(&sb);
 
                 if ((sk & SetPredict) == SetPredict) {
-                        uint32_t current_ts = sb.p[Accel].ts;
+                        uint32_t current_ts = k_uptime_get_32();
 
                         if (!pred_init) {
                                 last_ts = current_ts;
@@ -200,19 +286,20 @@ void simulant_task(void *, void *, void *) {
                                 continue;
                         }
 
+                        // barometric formula
                         float alt = 44330.0f * (1.0f - powf(prs / gnd_pressure, 1.0f / 5.255f));
 
                         eskf_update(&ekf, alt);
 
                         printk(
-                                "[ESKF] pz: %f, vz: %f, quat: %f %f %f %f\n",
+                                "[ESKF] alt:%10.4f vel:%10.4f quat:%10.4f %10.4f %10.4f %10.4f\n",
                                 (double)ekf.x[0],
                                 (double)ekf.x[1],
                                 (double)ekf.q[0],
                                 (double)ekf.q[1],
                                 (double)ekf.q[2],
                                 (double)ekf.q[3]
-                        );
+                        );                        
                 }
         }
 }
