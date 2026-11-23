@@ -18,7 +18,7 @@ case "${1:-}" in
 		BOARD="arduino:samd:nano_33_iot"
 		;;
 	*)
-		echo "Unrecognized board -- please add it to build.sh."
+        echo "Unrecognized board (hint: you can add yours to build.sh)."
 		exit 2
 		;;
 esac
@@ -46,23 +46,11 @@ case "$ACTION" in
 			arduino-cli core install arduino:samd
 			arduino-cli lib install Arduino_LSM6DS3
 			arduino-cli lib install "SAMD_TimerInterrupt"
-		else
-			echo "use 'conf' for $PLATFORM."
-		fi
-		;;
-
-	conf)
-		if [[ "$PLATFORM" == "zephyr" ]]; then
-			west build \
-				-p always \
-				--cmake-only \
-				-b "$BOARD" \
-				. \
-				-d "$BUILD_DIR" \
-				-- "${CMAKE_ARGS[@]}"
-		else
-			echo "use 'init' for $PLATFORM."
-			exit 1
+        elif [[ "$PLATFORM" == "zephyr" ]]; then
+			python -m venv .venv
+            source .venv/bin/activate
+            python -m pip install west jsonschema pyelftools
+            west update
 		fi
 		;;
 
@@ -112,7 +100,7 @@ case "$ACTION" in
 		;;
 
 	*)
-		echo "$ACTION is unrecognized -- please add it to build.sh."
+        echo "$ACTION is unrecognized (hint: you can add it to build.sh)."
 		exit 2
 		;;
 esac

@@ -1,4 +1,4 @@
 modules/
 zephyr/
-zvenv/    # Python venv for west
+.venv/
 build/
