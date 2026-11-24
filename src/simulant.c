@@ -197,7 +197,7 @@ static void ekf_predict(ekf_t *f, const float u[6], float dt) {
 
         float P_next[EKF_STATE * EKF_STATE];
 
-        const bool demo = false;
+        const bool demo = true;
 
         if (demo) {
           predict_covariance_buggy(P_next, f->P, dt);
@@ -292,7 +292,7 @@ void simulant_task(void *, void *, void *) {
                         ekf_update(&ekf, alt);
 
                         printk(
-                                "[ESKF] alt:%10.4f vel:%10.4f quat:%10.4f %10.4f %10.4f %10.4f\n",
+                                "[EKF] alt:%10.4f vel:%10.4f quat:%10.4f %10.4f %10.4f %10.4f\n",
                                 (double)ekf.x[0],
                                 (double)ekf.x[1],
                                 (double)ekf.q[0],
