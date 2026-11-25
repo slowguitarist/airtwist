@@ -1,3 +1,5 @@
+Note: development has moved to [Codeberg](https://codeberg.org/slowguitarist/airtwist).
+
 # AirTwist
 
 Real-time environment for Memsonic.
