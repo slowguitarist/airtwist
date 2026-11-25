@@ -25,7 +25,7 @@ Assuming embedded GDB is used:
 
 1. Visit [tasks.h](./src/tasks.h) and adjust compile-time constants relevant to your simulation.
 
-2. Put you flight plot into [profile.h](./src/profile.h).
+2. Put a theoretical flight profile into [profile.h](./src/profile.h).
 
 3. See [Building](#building).
 
